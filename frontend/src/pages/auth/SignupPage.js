@@ -6,13 +6,13 @@ import { authAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 export default function SignupPage() {
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [role,     setRole]     = useState('owner');
-  const [form,     setForm]     = useState({ name: '', email: '', phone: '', password: '', confirm: '' });
-  const [error,    setError]    = useState('');
-  const [loading,  setLoading]  = useState(false);
+  const [role, setRole] = useState('owner');
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirm: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -21,7 +21,7 @@ export default function SignupPage() {
     setError('');
 
     if (form.password !== form.confirm) { setError('Passwords do not match.'); return; }
-    if (form.password.length < 6)       { setError('Password must be at least 6 characters.'); return; }
+    if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
 
     setLoading(true);
     try {
@@ -39,22 +39,22 @@ export default function SignupPage() {
 
   return (
     <div style={styles.page}>
-      <div style={{...styles.blob, background: 'var(--accent)', top: '-100px', left: '-100px'}} />
-      <div style={{...styles.blob, background: 'var(--teal)', bottom: '-80px', right: '-80px'}} />
+      <div style={{ ...styles.blob, background: 'var(--accent)', top: '-100px', left: '-100px' }} />
+      <div style={{ ...styles.blob, background: 'var(--purple)', bottom: '-80px', right: '-80px' }} />
 
       <div style={styles.card}>
         <div style={styles.logo}>P</div>
         <h1 style={styles.brand}>PropEase</h1>
-        <p  style={styles.sub}>Create your account</p>
+        <p style={styles.sub}>Create your account</p>
 
         <div style={styles.tabs}>
-          <button style={{...styles.tab, ...(isOwner  ? styles.tabActive(false) : {})}} onClick={() => setRole('owner')}>🏢 I'm an Owner</button>
-          <button style={{...styles.tab, ...(!isOwner ? styles.tabActive(true)  : {})}} onClick={() => setRole('tenant')}>🏠 I'm a Tenant</button>
+          <button style={{ ...styles.tab, ...(isOwner ? styles.tabActive(false) : {}) }} onClick={() => setRole('owner')}>🏢 I'm an Owner</button>
+          <button style={{ ...styles.tab, ...(!isOwner ? styles.tabActive(true) : {}) }} onClick={() => setRole('tenant')}>🏠 I'm a Tenant</button>
         </div>
 
         {error && <div style={styles.errorBox}>⚠️ {error}</div>}
 
-        <form onSubmit={handleSubmit} style={{textAlign: 'left'}}>
+        <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
           <div className="form-group">
             <label>Full Name</label>
             <input className="form-input" name="name" placeholder="Rahul Sharma" value={form.name} onChange={handleChange} required />
@@ -75,13 +75,13 @@ export default function SignupPage() {
             <label>Confirm Password</label>
             <input className="form-input" name="confirm" type="password" placeholder="Repeat password" value={form.confirm} onChange={handleChange} required />
           </div>
-          <button type="submit" className="btn btn-primary" style={{width: '100%', justifyContent: 'center', marginTop: 4}} disabled={loading}>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 4 }} disabled={loading}>
             {loading ? '⏳ Creating account...' : `Create ${isOwner ? 'Owner' : 'Tenant'} Account`}
           </button>
         </form>
 
         <p style={styles.switchText}>
-          Already have an account? <Link to="/login" style={{color: 'var(--accent)'}}>Sign in</Link>
+          Already have an account? <Link to="/login" style={{ color: 'var(--accent)' }}>Sign in</Link>
         </p>
       </div>
     </div>
@@ -89,15 +89,15 @@ export default function SignupPage() {
 }
 
 const styles = {
-  page:     { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', position: 'relative', overflow: 'hidden', padding: 20 },
-  blob:     { position: 'absolute', width: 400, height: 400, borderRadius: '50%', filter: 'blur(70px)', opacity: 0.12, pointerEvents: 'none' },
-  card:     { position: 'relative', zIndex: 1, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 'var(--r3)', padding: '32px', width: '100%', maxWidth: 420, textAlign: 'center', boxShadow: '0 8px 48px rgba(0,0,0,.06)', maxHeight: '95vh', overflowY: 'auto' },
-  logo:     { width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg,var(--accent),var(--teal))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font2)', fontWeight: 700, fontSize: 20, color: '#fff', margin: '0 auto 10px' },
-  brand:    { fontFamily: 'var(--font2)', fontSize: 22, fontWeight: 700, marginBottom: 3 },
-  sub:      { fontSize: 12, color: 'var(--text3)', marginBottom: 20 },
-  tabs:     { display: 'flex', background: 'var(--bg3)', borderRadius: 10, padding: 4, marginBottom: 18, border: '1px solid var(--border)' },
-  tab:      { flex: 1, padding: '8px 0', borderRadius: 8, background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 12.5, fontWeight: 500, fontFamily: 'var(--font)' },
-  tabActive: (t) => ({ background: t ? 'var(--green2)' : 'var(--accent)', color: '#fff', boxShadow: '0 2px 10px rgba(32,178,112,.3)' }),
-  errorBox:  { background: 'rgba(44,93,65,.1)', border: '1px solid rgba(44,93,65,.2)', borderRadius: 8, padding: '9px 12px', fontSize: 12.5, color: 'var(--red)', marginBottom: 12, textAlign: 'left' },
+  page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--bg), var(--bg2))', position: 'relative', overflow: 'hidden', padding: 20 },
+  blob: { position: 'absolute', width: 400, height: 400, borderRadius: '50%', filter: 'blur(70px)', opacity: 0.12, pointerEvents: 'none' },
+  card: { position: 'relative', zIndex: 1, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 'var(--r3)', padding: '32px', width: '100%', maxWidth: 420, textAlign: 'center', boxShadow: '0 8px 48px rgba(0,0,0,.5)', maxHeight: '95vh', overflowY: 'auto' },
+  logo: { width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg,var(--accent),var(--purple))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font2)', fontWeight: 700, fontSize: 20, color: '#fff', margin: '0 auto 10px' },
+  brand: { fontFamily: 'var(--font2)', fontSize: 22, fontWeight: 700, marginBottom: 3 },
+  sub: { fontSize: 12, color: 'var(--text3)', marginBottom: 20 },
+  tabs: { display: 'flex', background: 'var(--bg3)', borderRadius: 10, padding: 4, marginBottom: 18, border: '1px solid var(--border)' },
+  tab: { flex: 1, padding: '8px 0', borderRadius: 8, background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 12.5, fontWeight: 500, fontFamily: 'var(--font)' },
+  tabActive: (t) => ({ background: t ? 'var(--green2)' : 'var(--accent)', color: '#fff' }),
+  errorBox: { background: 'rgba(255,107,107,.1)', border: '1px solid rgba(255,107,107,.2)', borderRadius: 8, padding: '9px 12px', fontSize: 12.5, color: 'var(--red)', marginBottom: 12, textAlign: 'left' },
   switchText: { marginTop: 16, fontSize: 12.5, color: 'var(--text3)' }
 };

@@ -10,17 +10,17 @@ import TenantProperties  from './TenantProperties';
 import TenantPayments    from './TenantPayments';
 import TenantMaintenance from './TenantMaintenance';
 import TenantMessages    from './TenantMessages';
-import TenantFAQ         from './TenantFAQ';
-import TenantAIAssistant from './TenantAIAssistant';
+import TenantMapSearch   from './TenantMapSearch';
+import TenantRequests    from './TenantRequests';
 
 const NAV_ITEMS = [
   { key: 'home',        icon: '🏠', label: 'My Home'     },
   { key: 'properties',  icon: '🔍', label: 'All Properties' },
+  { key: 'mapsearch',   icon: '🗺️', label: 'Map Search'    },
+  { key: 'requests',    icon: '📨', label: 'My Requests'   },
   { key: 'payments',    icon: '💳', label: 'Payments'    },
   { key: 'maintenance', icon: '🔧', label: 'Maintenance' },
   { key: 'messages',    icon: '💬', label: 'Messages'    },
-  { key: 'faq',         icon: '❓', label: 'FAQ'         },
-  { key: 'ai',          icon: '✨', label: 'AI Assistant'}
 ];
 
 export default function TenantDashboard() {
@@ -47,11 +47,11 @@ export default function TenantDashboard() {
     switch (activePage) {
       case 'home':        return <TenantHome        {...props} onNavigate={setActivePage} />;
       case 'properties':  return <TenantProperties  {...props} />;
+      case 'mapsearch':   return <TenantMapSearch    {...props} />;
+      case 'requests':    return <TenantRequests     {...props} onNavigate={setActivePage} />;
       case 'payments':    return <TenantPayments     {...props} />;
       case 'maintenance': return <TenantMaintenance  {...props} />;
       case 'messages':    return <TenantMessages     {...props} onRead={() => setUnreadCount(0)} />;
-      case 'faq':         return <TenantFAQ          {...props} />;
-      case 'ai':          return <TenantAIAssistant  {...props} />;
       default:            return <TenantHome         {...props} onNavigate={setActivePage} />;
     }
   };

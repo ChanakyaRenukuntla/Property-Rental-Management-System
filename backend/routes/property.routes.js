@@ -5,7 +5,7 @@ const router  = express.Router();
 
 const {
   getProperties, getProperty, createProperty,
-  updateProperty, deleteProperty, assignTenant
+  updateProperty, deleteProperty, assignTenant, bookProperty
 } = require('../controllers/property.controller');
 
 const { protect, authorize } = require('../middleware/auth');
@@ -32,8 +32,7 @@ router
 // PUT /api/properties/:id/assign-tenant → Assign tenant (owners only)
 router.put('/:id/assign-tenant', authorize('owner'), assignTenant);
 
-// POST /api/properties/:id/book → Book property (tenants only)
-const { bookProperty } = require('../controllers/property.controller');
-router.post('/:id/book', authorize('tenant'), bookProperty);
+// POST /api/properties/:id/book → Tenant pays and books a property
+router.post('/:id/book', bookProperty);
 
 module.exports = router;

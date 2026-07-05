@@ -41,11 +41,8 @@ export default function OwnerMaintenance({ showToast }) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Maintenance</h1>
-          <p className="page-subtitle">{requests.length} total requests from your tenants</p>
+          <p className="page-subtitle">{requests.length} total requests</p>
         </div>
-        <button className="btn btn-ghost" onClick={fetchAll} disabled={loading}>
-          {loading ? '↻ Refreshing...' : '↻ Refresh Requests'}
-        </button>
       </div>
 
       {/* Mini stats */}

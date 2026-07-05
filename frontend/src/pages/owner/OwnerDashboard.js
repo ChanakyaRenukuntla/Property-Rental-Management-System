@@ -14,10 +14,12 @@ import OwnerTenants     from './OwnerTenants';
 import OwnerPayments    from './OwnerPayments';
 import OwnerMaintenance from './OwnerMaintenance';
 import OwnerMessages    from './OwnerMessages';
+import OwnerRequests    from './OwnerRequests';
 
 // Sidebar navigation items for the owner
 const NAV_ITEMS = [
   { key: 'home',        icon: '📊', label: 'Dashboard'   },
+  { key: 'requests',    icon: '📨', label: 'Requests'    },
   { key: 'properties',  icon: '🏢', label: 'Properties'  },
   { key: 'tenants',     icon: '👥', label: 'Tenants'     },
   { key: 'payments',    icon: '💳', label: 'Payments'    },
@@ -50,6 +52,7 @@ export default function OwnerDashboard() {
     const props = { showToast };
     switch (activePage) {
       case 'home':        return <OwnerHome        {...props} onNavigate={setActivePage} />;
+      case 'requests':    return <OwnerRequests    {...props} />;
       case 'properties':  return <OwnerProperties  {...props} />;
       case 'tenants':     return <OwnerTenants      {...props} />;
       case 'payments':    return <OwnerPayments     {...props} />;

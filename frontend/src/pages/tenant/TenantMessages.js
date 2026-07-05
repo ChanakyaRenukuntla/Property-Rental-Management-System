@@ -1,7 +1,7 @@
 // src/pages/tenant/TenantMessages.js
 
 import React, { useEffect, useState, useRef } from 'react';
-import { messageAPI } from '../../services/api';
+import { messageAPI, tenantAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 export default function TenantMessages({ showToast, onRead }) {
@@ -17,6 +17,11 @@ export default function TenantMessages({ showToast, onRead }) {
     try {
       const res = await messageAPI.getConversations();
       setConversations(res.data.conversations);
+      
+      // Auto-select first conversation if none selected
+      if (res.data.conversations.length > 0) {
+        setActiveContact(prev => prev || res.data.conversations[0].contact);
+      }
     } catch (_) {}
   };
 
@@ -47,7 +52,7 @@ export default function TenantMessages({ showToast, onRead }) {
       setText('');
       fetchMessages(activeContact._id);
       fetchConversations();
-    } catch (_) { showToast('Error sending message', '❌'); }
+    } catch (_) { showToast('Error sending', '❌'); }
     setSending(false);
   };
 
@@ -82,12 +87,12 @@ export default function TenantMessages({ showToast, onRead }) {
                 style={{
                   display:'flex',alignItems:'center',gap:10,padding:'12px 16px',cursor:'pointer',
                   borderBottom:'1px solid var(--border)',transition:'.15s',
-                  background: activeContact?._id === conv.contact._id ? 'rgba(108,143,255,.08)' : 'transparent'
+                  background: activeContact?._id === conv.contact._id ? 'rgba(15,110,86,.08)' : 'transparent'
                 }}
                 onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,.03)'}
-                onMouseLeave={e => e.currentTarget.style.background = activeContact?._id === conv.contact._id ? 'rgba(108,143,255,.08)' : 'transparent'}
+                onMouseLeave={e => e.currentTarget.style.background = activeContact?._id === conv.contact._id ? 'rgba(15,110,86,.08)' : 'transparent'}
               >
-                <div style={{width:36,height:36,borderRadius:'50%',background:'linear-gradient(135deg,var(--accent),var(--purple))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#fff',flexShrink:0}}>
+                <div style={{width:36,height:36,borderRadius:'50%',background:'linear-gradient(135deg,var(--green2),#0f6e56)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#fff',flexShrink:0}}>
                   {getInitials(conv.contact.name)}
                 </div>
                 <div style={{flex:1,minWidth:0}}>
@@ -110,7 +115,7 @@ export default function TenantMessages({ showToast, onRead }) {
             <>
               {/* Chat header */}
               <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:10}}>
-                <div style={{width:36,height:36,borderRadius:'50%',background:'linear-gradient(135deg,var(--accent),var(--purple))',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:13,color:'#fff'}}>
+                <div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,var(--green2),#0f6e56)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:14,color:'#fff'}}>
                   {getInitials(activeContact.name)}
                 </div>
                 <div>
@@ -122,16 +127,17 @@ export default function TenantMessages({ showToast, onRead }) {
               {/* Messages */}
               <div style={{flex:1,overflowY:'auto',padding:16,display:'flex',flexDirection:'column',gap:8}}>
                 {messages.length === 0 ? (
-                  <div className="empty"><div className="empty-icon">💬</div><div className="empty-text">Start the conversation!</div></div>
+                  <div className="empty"><div className="empty-icon">💬</div><div className="empty-text">No messages yet. Say hello!</div></div>
                 ) : messages.map(msg => {
                   const isMine = msg.sender._id === user._id || msg.sender === user._id;
                   return (
                     <div key={msg._id} style={{display:'flex',flexDirection:'column',alignItems: isMine ? 'flex-end' : 'flex-start'}}>
                       <div style={{
-                        maxWidth:'70%',padding:'9px 14px',borderRadius: isMine ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                        maxWidth:'70%',padding:'9px 14px',
+                        borderRadius: isMine ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                         background: isMine ? 'linear-gradient(135deg,var(--green2),#0f6e56)' : 'var(--bg3)',
                         border: isMine ? 'none' : '1px solid var(--border)',
-                        color: 'var(--text)',fontSize:13,lineHeight:1.5
+                        color:'var(--text)',fontSize:13,lineHeight:1.5
                       }}>
                         {msg.text}
                       </div>
@@ -150,7 +156,7 @@ export default function TenantMessages({ showToast, onRead }) {
                   className="form-input"
                   value={text}
                   onChange={e => setText(e.target.value)}
-                  placeholder="Type a message..."
+                  placeholder="Type a message to your owner..."
                   style={{flex:1}}
                   autoFocus
                 />

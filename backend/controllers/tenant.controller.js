@@ -14,31 +14,9 @@ exports.getTenants = async (req, res) => {
       currentTenant: { $ne: null }
     }).populate('currentTenant', 'name email phone createdAt');
 
-    const Payment = require('../models/Payment');
-
-    // Safely filter out properties where the populated currentTenant ended up null 
-    // (which can happen if the User was deleted but property retained the ID)
-    const validProperties = properties.filter(p => p.currentTenant);
-
-    const tenants = await Promise.all(validProperties.map(async prop => {
-      // Aggregate total payments made by this tenant for this property
-      const payments = await Payment.find({
-        tenant: prop.currentTenant._id,
-        property: prop._id,
-        status: 'paid'
-      });
-      const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
-
-      return {
-        ...prop.currentTenant.toObject(),
-        property: { 
-          id: prop._id, 
-          title: prop.title, 
-          address: prop.address,
-          rent: prop.rent 
-        },
-        totalPaid
-      };
+    const tenants = properties.map(prop => ({
+      ...prop.currentTenant.toObject(),
+      property: { id: prop._id, title: prop.title, address: prop.address }
     }));
 
     res.json({ success: true, tenants });

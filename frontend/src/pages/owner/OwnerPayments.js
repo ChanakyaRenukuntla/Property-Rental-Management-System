@@ -5,7 +5,7 @@ import { paymentAPI, propertyAPI, tenantAPI } from '../../services/api';
 
 const STATUS_BADGE = { paid: 'badge-green', pending: 'badge-amber', overdue: 'badge-red' };
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const METHODS = ['cash','bank_transfer','upi','cheque','online','netbanking'];
+const METHODS = ['cash','bank_transfer','upi','cheque','online'];
 
 export default function OwnerPayments({ showToast }) {
   const [payments,    setPayments]    = useState([]);

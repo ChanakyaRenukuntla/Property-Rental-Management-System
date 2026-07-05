@@ -348,5 +348,3 @@ A: Interceptors run before every request or after every response. We use a reque
 
 **Q: How does role-based access work?**
 A: After login, the user object includes a `role` field ('owner' or 'tenant'). React Router shows different dashboards based on this role. On the backend, the `authorize('owner')` middleware checks the role before allowing access to owner-only routes.
-#   p r o p e a s e - m e r n  
- 

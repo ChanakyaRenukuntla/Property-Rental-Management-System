@@ -62,21 +62,6 @@ exports.getConversations = async (req, res) => {
       }
     }
 
-    const User = require('../models/User');
-    let additionalContacts = [];
-    if (req.user.role === 'owner') {
-      additionalContacts = await User.find({ role: 'tenant' }, 'name role');
-    } else {
-      additionalContacts = await User.find({ role: 'owner' }, 'name role');
-    }
-
-    for (const c of additionalContacts) {
-      if (!seen.has(c._id.toString())) {
-        seen.add(c._id.toString());
-        convos.push({ contact: c, lastMessage: null, unread: 0 });
-      }
-    }
-
     res.json({ success: true, conversations: convos });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

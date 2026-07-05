@@ -16,8 +16,13 @@ exports.getProperties = async (req, res) => {
   try {
     let query;
 
-    // Both Owner and Tenant see all properties in this new requirement
-    query = Property.find();
+    if (req.user.role === 'owner') {
+      // Owner sees only their own properties
+      query = Property.find({ owner: req.user._id });
+    } else {
+      // Tenant sees all properties (to browse and find a home)
+      query = Property.find();
+    }
 
     // .populate() replaces the owner ID with the actual owner's name/email
     const properties = await query
@@ -152,39 +157,58 @@ exports.assignTenant = async (req, res) => {
 
 // -------------------------------------------------------
 // @route   POST /api/properties/:id/book
-// @desc    Book a property and initiate first payment (Tenant only)
-// @access  Private + Tenant role
+// @desc    Tenant pays and books an available property
+// @access  Private
 // -------------------------------------------------------
 exports.bookProperty = async (req, res) => {
+  console.log('[bookProperty] STARTED - Params:', req.params.id, 'Body:', req.body, 'User:', req.user._id);
   try {
     const { paymentMethod } = req.body;
-    const Payment = require('../models/Payment');
-    
-    let property = await Property.findById(req.params.id);
-    if (!property) return res.status(404).json({ success: false, message: 'Property not found.' });
-    if (property.status !== 'available') return res.status(400).json({ success: false, message: 'Property is no longer available.' });
+    const property = await Property.findById(req.params.id);
 
-    // Mark as occupied
-    property.currentTenant = req.user._id;
+    if (!property) return res.status(404).json({ success: false, message: 'Property not found.' });
+    if (property.status !== 'available') return res.status(400).json({ success: false, message: 'Property is no longer available. It may have been booked by someone else.' });
+
+    // Ensure the tenant hasn't already booked another property
+    const currentlyOccupying = await Property.findOne({ currentTenant: req.user._id, status: 'occupied' });
+    if (currentlyOccupying) {
+      return res.status(400).json({ success: false, message: 'You have already booked a property. A tenant can only book one property at a time.' });
+    }
+
+    // 1. Mark property as occupied
     property.status = 'occupied';
+    property.currentTenant = req.user._id;
     await property.save();
 
-    // Generate initial deposit + rent payment
-    const totalAmount = (property.rent || 0) + (property.deposit || 0);
+    // 2. Create Payment Record (Rent + Deposit)
+    const Payment = require('../models/Payment');
+    
+    // Map frontend payment strings to backend enum
+    let validMethod = 'online';
+    if (['cash', 'bank_transfer', 'upi', 'cheque', 'online'].includes(paymentMethod)) {
+      validMethod = paymentMethod;
+    } else if (paymentMethod === 'netbanking') {
+      validMethod = 'bank_transfer';
+    } else if (paymentMethod === 'card') {
+      validMethod = 'online';
+    }
 
-    const payment = await Payment.create({
+    await Payment.create({
       property: property._id,
       tenant: req.user._id,
       owner: property.owner,
-      amount: totalAmount,
-      method: paymentMethod || 'online',
+      amount: property.rent + (property.deposit || 0),
+      month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
+      method: validMethod,
       status: 'paid',
       paidOn: new Date(),
-      notes: 'Initial Booking Payment'
+      notes: 'Initial booking payment (Rent + Deposit)'
     });
 
-    res.json({ success: true, message: 'Property booked successfully!', property, payment });
+    console.log('[bookProperty] DONE successfully');
+    res.json({ success: true, message: 'Property successfully booked!', property });
   } catch (error) {
+    console.error('[bookProperty] ERROR:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

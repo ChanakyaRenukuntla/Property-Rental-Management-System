@@ -1,45 +1,26 @@
 // src/pages/tenant/TenantProperties.js
 
 import React, { useEffect, useState } from 'react';
-import { propertyAPI } from '../../services/api';
+import { propertyAPI, requestAPI } from '../../services/api';
 
 const TYPE_ICONS = { apartment:'🏢', house:'🏠', studio:'🛋️', villa:'🏰', commercial:'🏬' };
 
-export default function TenantProperties() {
-  const [properties,   setProperties] = useState([]);
-  const [loading,      setLoading]    = useState(true);
-  const [search,       setSearch]     = useState('');
-  const [filter,       setFilter]     = useState('all');
-  const [bookingModal, setBookingModal] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('upi');
-  const [submitting,   setSubmitting]   = useState(false);
-
-  const fetchProperties = async () => {
-    try {
-      const res = await propertyAPI.getAll();
-      setProperties(res.data.properties);
-    } catch (_) {}
-    setLoading(false);
-  };
+export default function TenantProperties({ showToast }) {
+  const [properties, setProperties] = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [search,     setSearch]     = useState('');
+  const [filter,     setFilter]     = useState('all');
 
   useEffect(() => {
-    fetchProperties();
+    const fetch = async () => {
+      try {
+        const res = await propertyAPI.getAll();
+        setProperties(res.data.properties);
+      } catch (_) {}
+      setLoading(false);
+    };
+    fetch();
   }, []);
-
-  const handleBook = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await propertyAPI.bookProperty(bookingModal._id, { paymentMethod });
-      setBookingModal(null);
-      fetchProperties(); // refresh list
-      // Option: show toast if it was passed via props
-    } catch (error) {
-      console.error(error);
-      alert('Error booking property');
-    }
-    setSubmitting(false);
-  };
 
   const filtered = properties.filter(p => {
     const matchSearch = p.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -110,83 +91,34 @@ export default function TenantProperties() {
                 {prop.owner && (
                   <div style={{marginTop:10,fontSize:12,color:'var(--text3)'}}>🏢 Owner: {prop.owner.name}</div>
                 )}
-                <div className="prop-card-actions" style={{marginTop: 12}}>
-                  {prop.status === 'available' ? (
-                    <button className="btn btn-primary btn-sm" style={{width:'100%'}} onClick={() => setBookingModal(prop)}>
-                      Book Property
+                {prop.status === 'available' && (
+                  <div style={{ marginTop: 15 }}>
+                    <button 
+                      className="btn btn-primary" 
+                      style={{ width: '100%', justifyContent: 'center' }} 
+                      onClick={async () => {
+                        const userMsg = window.prompt("Optional: Add a message for the owner", "I am interested in this property.");
+                        if (userMsg === null) return;
+                        try {
+                          await requestAPI.create({ 
+                            propertyId: prop._id, 
+                            message: userMsg 
+                          });
+                          if(showToast) showToast(`Booking request sent successfully!`);
+                          else alert(`Booking request sent successfully!`);
+                        } catch (err) {
+                          if(showToast) showToast(err.response?.data?.message || 'Error sending request.', '❌');
+                          else alert(err.response?.data?.message || 'Error sending request.');
+                        }
+                      }}
+                    >
+                      Request to Book
                     </button>
-                  ) : null}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Booking / Payment Modal */}
-      {bookingModal && (
-        <div className="modal-overlay open" onClick={e => e.target === e.currentTarget && setBookingModal(null)}>
-          <div className="modal">
-            <div className="modal-header">
-              <span className="modal-title">Book {bookingModal.title}</span>
-              <button className="modal-close" onClick={() => setBookingModal(null)}>✕</button>
-            </div>
-            
-            <div style={{marginBottom: 20}}>
-              <p style={{fontSize:14, color:'var(--text2)', marginBottom:10}}>
-                You are about to book this property. The initial amount required is rent + deposit.
-              </p>
-              <div style={{background:'var(--bg3)', padding:12, borderRadius:8, display:'flex', flexDirection:'column', gap:8}}>
-                <div style={{display:'flex', justifyContent:'space-between'}}>
-                  <span>Monthly Rent:</span>
-                  <strong>₹{bookingModal.rent?.toLocaleString()}</strong>
-                </div>
-                <div style={{display:'flex', justifyContent:'space-between'}}>
-                  <span>Security Deposit:</span>
-                  <strong>₹{(bookingModal.deposit || 0).toLocaleString()}</strong>
-                </div>
-                <div style={{display:'flex', justifyContent:'space-between', borderTop:'1px solid var(--border)', paddingTop:8, marginTop:4}}>
-                  <span>Total Payable:</span>
-                  <strong style={{color:'var(--accent)', fontSize:16}}>₹{((bookingModal.rent || 0) + (bookingModal.deposit || 0)).toLocaleString()}</strong>
-                </div>
-              </div>
-            </div>
-
-            <form onSubmit={handleBook}>
-              <div className="form-group">
-                <label>Select Payment Method *</label>
-                <select className="form-select" value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} required>
-                  <option value="upi">UPI</option>
-                  <option value="netbanking">Netbanking</option>
-                  <option value="online">Debit / Credit Card</option>
-                </select>
-              </div>
-
-              {paymentMethod === 'upi' && (
-                <div className="form-group">
-                  <label>Enter UPI ID</label>
-                  <input className="form-input" placeholder="e.g. username@bank" required />
-                </div>
-              )}
-              {paymentMethod === 'netbanking' && (
-                <div className="form-group">
-                  <label>Select Bank</label>
-                  <select className="form-select" required>
-                    <option>HDFC Bank</option>
-                    <option>ICICI Bank</option>
-                    <option>State Bank of India</option>
-                  </select>
-                </div>
-              )}
-
-              <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:20}}>
-                <button type="button" className="btn btn-ghost" onClick={() => setBookingModal(null)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={submitting}>
-                  {submitting ? 'Processing...' : 'Pay & Book Now'}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
     </div>

@@ -60,19 +60,22 @@ export default function OwnerTenants({ showToast }) {
           <h1 className="page-title">Tenants</h1>
           <p className="page-subtitle">{tenants.length} active tenants</p>
         </div>
+        <button className="btn btn-primary" onClick={() => { setForm({ propertyId: '', tenantUserId: '' }); setModal(true); }}>
+          ➕ Assign Tenant
+        </button>
       </div>
 
       {tenants.length === 0 ? (
         <div className="empty card">
           <div className="empty-icon">👥</div>
-          <div className="empty-text">No tenants yet. Tenants will appear here once they book a property.</div>
+          <div className="empty-text">No tenants yet. Assign a tenant to a property to get started.</div>
         </div>
       ) : (
         <div className="card table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Name</th><th>Email</th><th>Phone</th><th>Property</th><th>Rent</th><th>Total Paid</th><th>Actions</th>
+                <th>Name</th><th>Email</th><th>Phone</th><th>Property</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -93,8 +96,6 @@ export default function OwnerTenants({ showToast }) {
                       {t.property?.title || '—'}
                     </span>
                   </td>
-                  <td style={{fontWeight:500}}>₹{t.property?.rent?.toLocaleString() || '0'}</td>
-                  <td style={{fontWeight:600, color:'var(--green)'}}>₹{t.totalPaid?.toLocaleString() || '0'}</td>
                   <td>
                     <button className="btn btn-danger btn-sm" onClick={() => handleRemove(t.property?.id)}>
                       Remove
@@ -104,6 +105,45 @@ export default function OwnerTenants({ showToast }) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* ASSIGN MODAL */}
+      {modal && (
+        <div className="modal-overlay open" onClick={e => e.target===e.currentTarget && setModal(false)}>
+          <div className="modal">
+            <div className="modal-header">
+              <span className="modal-title">Assign Tenant to Property</span>
+              <button className="modal-close" onClick={() => setModal(false)}>✕</button>
+            </div>
+            <form onSubmit={handleAssign}>
+              <div className="form-group">
+                <label>Select Property *</label>
+                <select className="form-select" value={form.propertyId} onChange={e => setForm({...form, propertyId: e.target.value})} required>
+                  <option value="">— Choose Property —</option>
+                  {properties.map(p => (
+                    <option key={p._id} value={p._id}>{p.title} ({p.status})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Select Tenant User *</label>
+                <select className="form-select" value={form.tenantUserId} onChange={e => setForm({...form, tenantUserId: e.target.value})} required>
+                  <option value="">— Choose Tenant —</option>
+                  {allUsers.map(u => (
+                    <option key={u._id} value={u._id}>{u.name} ({u.email})</option>
+                  ))}
+                </select>
+              </div>
+              <p style={{fontSize:12,color:'var(--text3)',marginBottom:14}}>
+                ℹ️ The tenant must have already signed up with the Tenant role.
+              </p>
+              <div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
+                <button type="button" className="btn btn-ghost" onClick={() => setModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Assigning...' : 'Assign'}</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

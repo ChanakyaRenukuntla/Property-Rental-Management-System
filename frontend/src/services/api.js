@@ -80,7 +80,7 @@ export const propertyAPI = {
   // PUT /api/properties/:id/assign-tenant
   assignTenant: (id, tenantId) => api.put(`/properties/${id}/assign-tenant`, { tenantId }),
 
-  // POST /api/properties/:id/book
+  // POST /api/properties/:id/book (legacy mock wrapper if needed)
   bookProperty: (id, data) => api.post(`/properties/${id}/book`, data),
 };
 
@@ -128,11 +128,12 @@ export const messageAPI = {
 };
 
 // ============================================================
-// AI ENDPOINTS
+// REQUEST ENDPOINTS
 // ============================================================
-export const aiAPI = {
-  chat: (data) => api.post('/ai/chat', data),
+export const requestAPI = {
+  create:       (data)       => api.post('/requests', data),
+  getAll:       ()           => api.get('/requests'),
+  updateStatus: (id, data)   => api.put(`/requests/${id}/status`, data),
 };
 
 export default api;
-
