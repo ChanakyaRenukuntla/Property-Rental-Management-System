@@ -37,6 +37,7 @@ app.use('/api/payments',    require('./routes/payment.routes'));
 app.use('/api/maintenance', require('./routes/maintenance.routes'));
 app.use('/api/messages',    require('./routes/message.routes'));
 app.use('/api/requests',    require('./routes/request.routes'));
+app.use('/api/ai',          require('./routes/ai.routes'));
 
 // Health check — visit http://localhost:5000/ to confirm server is running
 app.get('/', (req, res) => {

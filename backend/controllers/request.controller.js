@@ -89,7 +89,7 @@ exports.updateRequestStatus = async (req, res) => {
       .populate('tenant');
 
     if (!request) return res.status(404).json({ success: false, message: 'Request not found.' });
-    if (request.owner.toString() !== req.user._id.toString()) {
+    if (!request.owner || request.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized.' });
     }
 
@@ -100,10 +100,11 @@ exports.updateRequestStatus = async (req, res) => {
     if (status === 'accepted') {
       // Mark property as occupied? No, let them finalize in chat first.
       // Send an auto-message from Owner to Tenant
+      const placeName = request.isExternal ? request.externalTitle : request.property?.title;
       await Message.create({
         sender: req.user._id,
         receiver: request.tenant._id,
-        text: `Hello ${request.tenant.name}, I have accepted your request for ${request.property.title}. Let's chat!`
+        text: `Hello ${request.tenant.name}, I have accepted your request for ${placeName || 'your inquiry'}. Let's chat!`
       });
     }
 

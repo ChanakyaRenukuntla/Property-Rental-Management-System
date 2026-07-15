@@ -46,7 +46,7 @@ export default function OwnerRequests({ showToast, onNavigate }) {
           {requests.map(req => (
             <div key={req._id} className="card" style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
               <div>
-                <h3 style={{margin:0}}>{req.property?.title}</h3>
+                <h3 style={{margin:0}}>{req.isExternal ? req.externalTitle : req.property?.title}</h3>
                 <p style={{fontSize:13, color:'var(--text3)', margin:'5px 0'}}>
                   Tenant: {req.tenant?.name} ({req.tenant?.email} • {req.tenant?.phone})
                 </p>

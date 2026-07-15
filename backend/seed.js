@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 // Load models
 const User = require('./models/User');
@@ -12,7 +11,7 @@ const BookingRequest = require('./models/BookingRequest');
 async function seed() {
     try {
         console.log('Connecting to database...');
-        await mongoose.connect('mongodb://127.0.0.1:27017/');
+        await mongoose.connect('mongodb://127.0.0.1:27017/propease');
         console.log('Connected. Clearing existing data...');
 
         await User.deleteMany({});
@@ -23,12 +22,12 @@ async function seed() {
         await BookingRequest.deleteMany({});
 
         console.log('Seeding Users...');
-        const passwordHash = await bcrypt.hash('password123', 10);
 
+        // Plain password here — the User model's pre('save') hook hashes it automatically.
         const owner = await User.create({
             name: 'PropEase Admin Owner',
             email: 'owner@gmail.com',
-            password: passwordHash,
+            password: 'password123',
             role: 'owner',
             phone: '555-0100'
         });
@@ -36,7 +35,7 @@ async function seed() {
         const tenant = await User.create({
             name: 'Bob Tenant',
             email: 'tenant@gmail.com',
-            password: passwordHash,
+            password: 'password123',
             role: 'tenant',
             phone: '555-0200'
         });

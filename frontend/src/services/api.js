@@ -9,9 +9,9 @@
 import axios from 'axios';
 
 // Create an Axios instance with our backend URL as the base
-// Any call like api.get('/properties') will hit http://localhost:5000/api/properties
+// Any call like api.get('/properties') will hit http://localhost:5050/api/properties
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'http://localhost:5050/api',
   headers: { 'Content-Type': 'application/json' }
 });
 
@@ -134,6 +134,13 @@ export const requestAPI = {
   create:       (data)       => api.post('/requests', data),
   getAll:       ()           => api.get('/requests'),
   updateStatus: (id, data)   => api.put(`/requests/${id}/status`, data),
+};
+
+// ============================================================
+// AI ASSISTANT ENDPOINTS
+// ============================================================
+export const aiAPI = {
+  chat: (data) => api.post('/ai/chat', data),
 };
 
 export default api;

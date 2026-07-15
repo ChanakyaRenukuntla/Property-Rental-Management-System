@@ -161,7 +161,6 @@ exports.assignTenant = async (req, res) => {
 // @access  Private
 // -------------------------------------------------------
 exports.bookProperty = async (req, res) => {
-  console.log('[bookProperty] STARTED - Params:', req.params.id, 'Body:', req.body, 'User:', req.user._id);
   try {
     const { paymentMethod } = req.body;
     const property = await Property.findById(req.params.id);
@@ -205,10 +204,8 @@ exports.bookProperty = async (req, res) => {
       notes: 'Initial booking payment (Rent + Deposit)'
     });
 
-    console.log('[bookProperty] DONE successfully');
     res.json({ success: true, message: 'Property successfully booked!', property });
   } catch (error) {
-    console.error('[bookProperty] ERROR:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

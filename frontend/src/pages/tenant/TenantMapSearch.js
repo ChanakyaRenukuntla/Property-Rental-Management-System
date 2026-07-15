@@ -20,6 +20,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow
 });
 
+// Bounding box that covers all of India (SW, NE corners)
+const INDIA_BOUNDS = [
+  [6.5, 68.0],
+  [37.5, 97.5]
+];
+
+// Fallback location used when a searched place can't be found
+const HYDERABAD = { name: 'Hyderabad', lat: 17.385, lon: 78.4867 };
+
 // Component to dynamically recenter map
 function ChangeView({ center, zoom }) {
   const map = useMap();
@@ -33,66 +42,69 @@ export default function TenantMapSearch() {
   const [markers, setMarkers] = useState([]);
   const [mapCenter, setMapCenter] = useState([20.5937, 78.9629]); // India center default
   const [zoom, setZoom] = useState(5);
+  const [notice, setNotice] = useState('');
+
+  const plotPropertiesAround = async (latitude, longitude, cityFilter) => {
+    const res = await propertyAPI.getAll();
+    const allProps = res.data.properties || [];
+
+    const searchStr = cityFilter.toLowerCase();
+    const matched = allProps.filter(p =>
+      p.address?.city?.toLowerCase().includes(searchStr) ||
+      p.title?.toLowerCase().includes(searchStr)
+    );
+
+    // Generate slight random offsets for them (since our DB lacks lat/long)
+    // This spreads them out around the city center
+    const mappedMarkers = matched.map(p => {
+      const latOffset = (Math.random() - 0.5) * 0.04;
+      const lonOffset = (Math.random() - 0.5) * 0.04;
+      return { ...p, lat: latitude + latOffset, lon: longitude + lonOffset };
+    });
+
+    setMarkers(mappedMarkers);
+    return mappedMarkers.length;
+  };
 
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!place.trim()) return;
 
     setLoading(true);
+    setNotice('');
     try {
-      // 1. Geocode with Nominatim
-      const nomRes = await axios.get(`https://nominatim.openstreetmap.org/search`, {
-        params: { q: place, format: 'json', limit: 1 }
+      // Restrict geocoding to India only, so a name that also exists abroad
+      // (e.g. a same-named town in Pakistan) can't be matched by mistake.
+      const nomRes = await axios.get('https://nominatim.openstreetmap.org/search', {
+        params: { q: place, format: 'json', limit: 1, countrycodes: 'in' }
       });
 
-      let latitude = 20.5937;
-      let longitude = 78.9629;
-      let foundPlace = false;
-
-      if (nomRes.data.length > 0) {
-        latitude = parseFloat(nomRes.data[0].lat);
-        longitude = parseFloat(nomRes.data[0].lon);
-        setMapCenter([latitude, longitude]);
-        setZoom(13); // Zoom in closer
-        foundPlace = true;
-      } else {
-        alert("Location coordinates not found. Try a simpler place name.");
+      if (nomRes.data.length === 0) {
+        // Fallback: couldn't find the place — show Hyderabad area properties instead
+        setMapCenter([HYDERABAD.lat, HYDERABAD.lon]);
+        setZoom(12);
+        const count = await plotPropertiesAround(HYDERABAD.lat, HYDERABAD.lon, HYDERABAD.name);
+        setNotice(
+          count > 0
+            ? `Couldn't find "${place}" in India — showing Hyderabad area properties instead.`
+            : `Couldn't find "${place}" in India, and no Hyderabad properties are available either.`
+        );
         setLoading(false);
         return;
       }
 
-      // 2. Fetch our system properties (instead of external Overpass data)
-      const res = await propertyAPI.getAll();
-      const allProps = res.data.properties || [];
+      const latitude = parseFloat(nomRes.data[0].lat);
+      const longitude = parseFloat(nomRes.data[0].lon);
+      setMapCenter([latitude, longitude]);
+      setZoom(13);
 
-      // Filter properties matching the searched place (by city or title)
-      const searchStr = place.toLowerCase();
-      const matched = allProps.filter(p => 
-        p.address?.city?.toLowerCase().includes(searchStr) || 
-        p.title?.toLowerCase().includes(searchStr)
-      );
-
-      // Generate slight random offsets for them (since our DB lacks lat/long)
-      // This spreads them out around the searched city center
-      const mappedMarkers = matched.map((p, index) => {
-        // approx offset between -0.02 and +0.02 degrees (~2km radius)
-        const latOffset = (Math.random() - 0.5) * 0.04; 
-        const lonOffset = (Math.random() - 0.5) * 0.04;
-        return {
-          ...p,
-          lat: latitude + latOffset,
-          lon: longitude + lonOffset
-        };
-      });
-
-      setMarkers(mappedMarkers);
-      if (mappedMarkers.length === 0) {
-        alert(`No available properties found in ${place} within our system.`);
+      const count = await plotPropertiesAround(latitude, longitude, place);
+      if (count === 0) {
+        setNotice(`No available properties found in ${place} within our system.`);
       }
-
     } catch (err) {
       console.error(err);
-      alert("Error fetching map data. Please check console.");
+      setNotice('Error fetching map data. Please check console.');
     }
     setLoading(false);
   };
@@ -120,10 +132,18 @@ export default function TenantMapSearch() {
             {loading ? 'Searching...' : '🔍 Search on Map'}
           </button>
         </form>
+        {notice && <p style={{ color: 'var(--red)', fontSize: 12.5, marginTop: 10 }}>⚠️ {notice}</p>}
       </div>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden', height: '600px', zIndex: 0, position: 'relative' }}>
-        <MapContainer center={mapCenter} zoom={zoom} style={{ height: '100%', width: '100%', zIndex: 1 }}>
+        <MapContainer
+          center={mapCenter}
+          zoom={zoom}
+          minZoom={5}
+          maxBounds={INDIA_BOUNDS}
+          maxBoundsViscosity={1.0}
+          style={{ height: '100%', width: '100%', zIndex: 1 }}
+        >
           <ChangeView center={mapCenter} zoom={zoom} />
           <TileLayer
             attribution='&amp;copy <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -148,16 +168,16 @@ export default function TenantMapSearch() {
                   <div style={{ display:'flex', gap: '5px', marginTop: '12px' }}>
                     <span className={`badge badge-${prop.status==='available'?'green':'amber'}`}>{prop.status}</span>
                     {prop.status === 'available' && (
-                      <button 
-                        className="btn btn-primary btn-sm" 
-                        style={{ flex: 1, justifyContent:'center' }} 
+                      <button
+                        className="btn btn-primary btn-sm"
+                        style={{ flex: 1, justifyContent:'center' }}
                         onClick={async () => {
                           const userMsg = window.prompt("Optional: Add a message for the owner", "I am interested in this property from the map search.");
                           if (userMsg === null) return; // User cancelled
                           try {
-                            await requestAPI.create({ 
-                              propertyId: prop._id, 
-                              message: userMsg 
+                            await requestAPI.create({
+                              propertyId: prop._id,
+                              message: userMsg
                             });
                             alert(`Booking request sent successfully to the owner of ${prop.title}!`);
                           } catch (err) {
